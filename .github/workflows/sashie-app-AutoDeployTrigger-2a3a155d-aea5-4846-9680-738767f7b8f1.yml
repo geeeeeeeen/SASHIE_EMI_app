@@ -1,0 +1,42 @@
+name: Trigger auto deployment for sashie-app
+
+# When this action will be executed
+on:
+  # Automatically trigger it when detected changes in repo
+  push:
+    branches: 
+      [ master ]
+    paths:
+    - '**'
+    - '.github/workflows/sashie-app-AutoDeployTrigger-2a3a155d-aea5-4846-9680-738767f7b8f1.yml'
+
+  # Allow manual trigger 
+  workflow_dispatch:
+      
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout to the branch
+        uses: actions/checkout@v2
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.SASHIEAPP_AZURE_CREDENTIALS }}
+
+      - name: Build and push container image to registry
+        uses: azure/container-apps-deploy-action@v1
+        with:
+          appSourcePath: ${{ github.workspace }} 
+          registryUrl: ca61932904ffacr.azurecr.io
+          registryUsername: ${{ secrets.SASHIEAPP_REGISTRY_USERNAME }}
+          registryPassword: ${{ secrets.SASHIEAPP_REGISTRY_PASSWORD }}
+          containerAppName: sashie-app
+          resourceGroup: smc-ssg-same
+          imageToBuild: ca61932904ffacr.azurecr.io/sashie-app:${{ github.sha }}
+          
+
+     
+
